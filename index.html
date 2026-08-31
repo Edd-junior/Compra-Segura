@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -8,7 +7,7 @@
 
   <!-- Bootstrap CSS -->
   <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    href="https://jsdelivr.net"
     rel="stylesheet"
   />
 
@@ -71,6 +70,7 @@
       border-radius:16px;
       color:white;
       font-size:14px;
+      word-break: break-all; /* Evita que links longos quebrem o layout */
     }
 
     .received{
@@ -123,30 +123,16 @@
       <div class="avatar">A</div>
 
       <div>
-        <h6 class="m-0">Arthur</h6>
-        <small class="text-success">Online</small>
+        <h6 class="m-0">Arthur Bot</h6>
+        <small class="text-success">Analisador Ativo</small>
       </div>
     </div>
 
     <!-- Mensagens -->
-    <div class="chat-messages">
-
+    <div class="chat-messages" id="chatContainer">
       <div class="message received">
-        Opa, tudo bem?
+        Olá! Envie um texto ou um link de produto para eu analisar. 🤖
       </div>
-
-      <div class="message sent">
-        Tudo sim 😎
-      </div>
-
-      <div class="message received">
-        Curti muito esse design.
-      </div>
-
-      <div class="message sent">
-        Feito com Bootstrap + CSS.
-      </div>
-
     </div>
 
     <!-- Input -->
@@ -154,11 +140,12 @@
       <div class="input-group">
         <input
           type="text"
+          id="messageInput"
           class="form-control"
-          placeholder="Digite uma mensagem..."
+          placeholder="Digite uma mensagem ou cole um link..."
         >
 
-        <button class="btn btn-send text-white">
+        <button id="sendButton" class="btn btn-send text-white">
           Enviar
         </button>
       </div>
@@ -166,6 +153,56 @@
 
   </div>
 
+  <!-- Script de Conexão com o Python -->
+  <script>
+    const chatContainer = document.getElementById('chatContainer');
+    const messageInput = document.getElementById('messageInput');
+    const sendButton = document.getElementById('sendButton');
+
+    // Função auxiliar para renderizar balões de mensagens
+    function renderMessage(text, type) {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `message ${type}`;
+      msgDiv.textContent = text;
+      chatContainer.appendChild(msgDiv);
+      chatContainer.scrollTop = chatContainer.scrollHeight; // Rola o chat para o fim
+    }
+
+    // Função que faz o envio dos dados para a API Python
+    async function handleSendMessage() {
+      const messageText = messageInput.value.trim();
+      if (!messageText) return;
+
+      // 1. Mostra a mensagem do usuário na tela instantaneamente
+      renderMessage(messageText, 'sent');
+      messageInput.value = '';
+
+      try {
+        // 2. Envia para o back-end em Python
+        const response = await fetch('/api/mensagem', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ mensagem: messageText })
+        });
+
+        const data = await response.json();
+        
+        // 3. Exibe o retorno do analisador Python no chat
+        renderMessage(data.resposta, 'received');
+
+      } catch (error) {
+        renderMessage('⚠️ Erro ao tentar conectar com o servidor Python.', 'received');
+        console.error(error);
+      }
+    }
+
+    // Eventos de clique e tecla Enter
+    sendButton.addEventListener('click', handleSendMessage);
+    messageInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSendMessage();
+    });
+  </script>
 </body>
 </html>
-```
