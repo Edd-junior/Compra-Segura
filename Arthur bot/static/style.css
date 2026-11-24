@@ -1,0 +1,19 @@
+body {
+    background-color: #f1f3f5;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    font-weight: bold;
+}
+
+.card {
+    border: none;
+    border-radius: 12px;
+}
+
+#resultado img {
+    display: block;
+    margin-bottom: 15px;
+    border-radius: 8px;
+}

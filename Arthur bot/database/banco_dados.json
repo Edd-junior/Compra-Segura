@@ -1,0 +1,11 @@
+
+{
+    "produtos_analisados": [],
+    "lojas_confiaveis": [
+        "mercadolivre.com.br",
+        "amazon.com.br"
+    ],
+    "lojas_suspeitas": [],
+    "vendedores": [],
+    "historico": []
+}

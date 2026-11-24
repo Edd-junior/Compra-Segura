@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Arthur Bot</title>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <main class="container py-5">
+
+        <h1 class="text-center mb-2">Arthur Bot</h1>
+
+        <p class="text-center">
+            Análise informativa de produtos e vendedores.
+        </p>
+
+        <div class="card p-4 shadow-sm mt-4">
+
+            <label for="linkProduto" class="form-label">
+                Link do produto
+            </label>
+
+            <input
+                type="text"
+                id="linkProduto"
+                class="form-control"
+                placeholder="Cole o link do Mercado Livre"
+            >
+
+            <button
+                class="btn btn-primary mt-3"
+                id="botaoAnalisar"
+                onclick="analisarProduto()">
+
+                Analisar produto
+
+            </button>
+
+            <div id="resultado" class="mt-4"></div>
+
+        </div>
+
+        <div class="card p-4 shadow-sm mt-4">
+
+            <h3>Histórico de análises</h3>
+
+            <button
+                class="btn btn-secondary mt-2"
+                onclick="carregarHistorico()">
+
+                Consultar histórico
+
+            </button>
+
+            <div id="historico" class="mt-3"></div>
+
+        </div>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>
