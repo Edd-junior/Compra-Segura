@@ -6,7 +6,7 @@ import requests
 
 from pathlib import Path
 from datetime import datetime
-from urllib.parse import urlparse, urljoin, parse_qs
+from urllib.parse import urlparse, urljoin, parse_qs, unquote
 from threading import Lock
 
 from flask import Flask, request, jsonify, render_template
@@ -185,12 +185,22 @@ def dominio_valido(host):
     ) or host == "meli.la"
 
 
-def resolver_link(link):
+HEADERS_NAVEGADOR = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    ),
+    "Accept-Language": "pt-BR,pt;q=0.9",
+}
+
+
+def resolver_link_com_historico(link):
 
     if not link.startswith(("http://", "https://")):
         link = "https://" + link
 
     atual = link
+    percorridas = [atual]
 
     for tentativa in range(6):
 
@@ -207,7 +217,7 @@ def resolver_link(link):
         try:
             resposta = requests.get(
                 atual,
-                headers={"User-Agent": "ArthurBot/1.0"},
+                headers=HEADERS_NAVEGADOR,
                 allow_redirects=False,
                 timeout=15
             )
@@ -227,19 +237,26 @@ def resolver_link(link):
                 )
 
             atual = urljoin(atual, destino)
+            percorridas.append(atual)
             continue
 
-        return atual
+        return atual, percorridas
 
     raise ArthurBotError(
         "O link possui muitos redirecionamentos."
     )
 
 
+def resolver_link(link):
+
+    atual, _ = resolver_link_com_historico(link)
+
+    return atual
+
 
 def extrair_ids(link):
 
-    url = resolver_link(link)
+    url, percorridas = resolver_link_com_historico(link)
 
     print("\n========== DIAGNÓSTICO ARTHUR BOT ==========")
     print("Link recebido:", link)
@@ -314,12 +331,55 @@ def extrair_ids(link):
 
         print("URL recebida:", link)
         print("URL após redirecionamento:", url)
+        
+    #Procura em TODOS os endereços do caminho (já decodificados)
+    
+    if not item_id and not product_id:
+
+        for etapa in percorridas:
+
+            texto = etapa
+
+            for _ in range(3):
+                texto = unquote(texto)
+
+            texto = texto.upper()
+
+            encontrado = re.search(r"/P/(MLB-?\d{6,})", texto)
+
+            if encontrado:
+                product_id = encontrado.group(1)
+                break
+
+            encontrado = re.search(r"(MLB-?\d{6,})", texto)
+
+            if encontrado:
+                item_id = encontrado.group(1)
+                break
+        
 
         raise ArthurBotError(
             "Não foi possível identificar o código MLB do produto. "
             "Verifique se o link abre diretamente o anúncio."
         )
 
+
+    # A API do Mercado Livre usa o código sem hífen (MLB123, não MLB-123)
+    if item_id:
+        item_id = item_id.replace("-", "")
+
+    if product_id:
+        product_id = product_id.replace("-", "")
+
+    print("Produto identificado:", item_id or product_id)
+
+    return {
+        "item_id": item_id,
+        "product_id": product_id,
+        "url": url
+    }
+
+    
     print("Produto identificado:", item_id or product_id)
 
     return {
